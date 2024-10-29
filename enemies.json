@@ -1,0 +1,26 @@
+{
+  "wolf": {
+    "name": "Wolf",
+    "life": 2,
+    "attack": 1,
+    "armor": 0,
+    "speed": 2,
+    "image_path": "sprites/wolf.png"
+  },
+  "werwolf": {
+    "name": "Werwolf",
+    "life": 3,
+    "attack": 2,
+    "armor": 0,
+    "speed": 1,
+    "image_path": "sprites/werwolf-001.png"
+  },
+  "mosquito": {
+    "name": "Mosquito",
+    "life": 1,
+    "attack": 1,
+    "armor": 0,
+    "speed": 5,
+    "image_path": "sprites/mosquito-001.png"
+  }
+}
