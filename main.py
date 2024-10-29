@@ -1,10 +1,54 @@
 # main.py
 import pygame
 import sys
+
+from characters import characters
 from dungeon import create_new_dungeon
+from highscore import load_high_scores
 from shop import shop
 from config import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, WHITE, TILE_SIZE, BROWN, BLACK
 from player import Player
+
+
+def select_character(screen):
+    font = pygame.font.Font(None, 36)
+    selected_index = 0
+
+    # Load high scores and pass characters as an argument
+    high_scores = load_high_scores(characters)
+
+    while True:
+        screen.fill((0, 0, 0))
+
+        for i, char in enumerate(characters):
+            color = (255, 255, 255) if i == selected_index else (100, 100, 100)
+            char_text = font.render(f"{char['name']} - HP: {char['stats']['life']}, AP: {char['stats']['attack']}", True, color)
+            highscore_text = font.render(f"High Score: {high_scores[char['name']]}", True, color)
+
+            screen.blit(char_text, (100, 100 + i * 100))
+            screen.blit(highscore_text, (100, 130 + i * 100))
+
+            # Display character image
+            char_image = pygame.image.load(char["image_path"]).convert_alpha()
+            char_image = pygame.transform.scale(char_image, (TILE_SIZE * 2, TILE_SIZE * 2))
+            screen.blit(char_image, (50, 100 + i * 100))
+
+        instructions = font.render("Use UP/DOWN to select, ENTER to choose", True, (255, 255, 255))
+        screen.blit(instructions, (100, SCREEN_HEIGHT - 60))
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_DOWN:
+                    selected_index = (selected_index + 1) % len(characters)
+                elif event.key == pygame.K_UP:
+                    selected_index = (selected_index - 1) % len(characters)
+                elif event.key == pygame.K_RETURN:
+                    return characters[selected_index]
 
 def step_back(player, dx, dy):
     """Move the player one step back to avoid re-colliding with the room."""
@@ -38,8 +82,8 @@ def draw_hud(screen, player, enemy=None):
     player_text_2 = font.render(player_stats_2, True, (255, 0, 0))
     gold_text = font.render(f"Gold: {player.gold}", True, (255, 0, 0))
 
-    screen.blit(player_text_1, (player.image.get_width() * 2 + 100, SCREEN_HEIGHT - 40))
-    screen.blit(player_text_2, (player.image.get_width() * 2 + 100, SCREEN_HEIGHT - 80))
+    screen.blit(player_text_1, (player.image.get_width() * 3 + 100, SCREEN_HEIGHT - 40))
+    screen.blit(player_text_2, (player.image.get_width() * 3 + 100, SCREEN_HEIGHT - 80))
     screen.blit(gold_text, (player.image.get_width() * 2, 20))
     player_image_y = SCREEN_HEIGHT - player.image.get_height() * 2
     player_image = pygame.transform.scale(player.image, (TILE_SIZE * 2, TILE_SIZE * 2))
@@ -58,14 +102,27 @@ def main():
     pygame.display.set_caption("Autobattler Roguelite 001")
     clock = pygame.time.Clock()
 
-    player_image_path = "sprites/gustav-gans.png"
+    chosen_character = select_character(screen)
+    high_scores = load_high_scores(characters)
     dungeon_level, rooms_cleared = 1, 0
     dungeon = create_new_dungeon(dungeon_level)
-
-    # Set player starting position
     start_pos = dungeon.get_random_path_position()
-    player = Player(*start_pos, player_image_path) if start_pos else sys.exit("No valid path position available")
+    if not start_pos:
+        print("No valid starting position found.")
+        pygame.quit()
+        sys.exit()
+    # Set player starting position
+    player = Player(
+        x=start_pos[0],
+        y=start_pos[1],
+        image_path=chosen_character["image_path"],
+        life=chosen_character["stats"]["life"],
+        attack=chosen_character["stats"]["attack"],
+        armor=chosen_character["stats"]["armor"],
+        speed=chosen_character["stats"]["speed"]
+    )
     last_position = (player.x, player.y)
+    player.start_pos = dungeon.get_random_path_position()
 
     running = True
     in_battle, current_enemy, current_room, in_shop = False, None, None, False
@@ -97,6 +154,9 @@ def main():
                         print("Game Over!")
                         pygame.time.wait(2000)
                         main()  # Restart the game
+                        if player.gold > high_scores[selected_character["name"]]:
+                            high_scores[selected_character["name"]] = player.gold
+                            save_high_scores(high_scores)
                 elif event.key == pygame.K_ESCAPE and in_battle:
                     # Leave room without fighting
                     print("Left the room.")

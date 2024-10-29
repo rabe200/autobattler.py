@@ -30,7 +30,7 @@ class Dungeon:
         for i in range(num_rooms):
             # Create room with an enemy
             room = Room(current_x, current_y, has_enemy=True)
-            room.enemy = create_random_enemy(current_x, current_y, TILE_SIZE)
+            room.enemy = create_random_enemy(current_x, current_y, TILE_SIZE,self.level)
             self.rooms.append(room)
 
             retries = 0
@@ -42,7 +42,7 @@ class Dungeon:
                 else:
                     new_x = current_x
                     new_y = current_y + random.choice([-2, 2]) * TILE_SIZE
-                    new_y = max(TILE_SIZE, min(new_y, SCREEN_HEIGHT - TILE_SIZE *3))
+                    new_y = max(TILE_SIZE, min(new_y, SCREEN_HEIGHT - TILE_SIZE * 3))
 
                 last_vertical = not last_vertical
 
@@ -58,7 +58,9 @@ class Dungeon:
 
             self.add_path(room, new_x, new_y)
             current_x, current_y = new_x, new_y
-            self.create_hidden_entrance_room()
+
+        # After creating all regular rooms, create the hidden entrance room
+        self.create_hidden_entrance_room()
 
         print(f"Total rooms generated: {len(self.rooms)}. Total paths: {len(self.paths)}.")
 
@@ -74,7 +76,7 @@ class Dungeon:
             current_y += TILE_SIZE if to_y > current_y else -TILE_SIZE
             self.paths.append(pygame.Rect(current_x, current_y, TILE_SIZE, TILE_SIZE))
 
-    def draw(self, screen, reveal_entrance = False):
+    def draw(self, screen, reveal_entrance=False):
         # Draw paths
         for path in self.paths:
             pygame.draw.rect(screen, BROWN, path)
@@ -96,7 +98,7 @@ class Dungeon:
         return None
 
     def create_hidden_entrance_room(self):
-        """Create an entrance room with a hidden path to it."""
+        """Create an entrance room with a hidden path to it, within defined viewport boundaries."""
         last_room = self.rooms[-1]  # Start from the last room in the list
         num_path_tiles = random.randint(1, 8)
         current_x, current_y = last_room.x, last_room.y
@@ -104,18 +106,20 @@ class Dungeon:
         # Create the path leading to the entrance room
         for _ in range(num_path_tiles):
             direction = random.choice(["up", "down", "left", "right"])
-            if direction == "up":
+            if direction == "up" and current_y > TILE_SIZE:
                 current_y -= TILE_SIZE
-            elif direction == "down":
+            elif direction == "down" and current_y < SCREEN_HEIGHT - TILE_SIZE * 3:
                 current_y += TILE_SIZE
-            elif direction == "left":
+            elif direction == "left" and current_x > TILE_SIZE:
                 current_x -= TILE_SIZE
-            elif direction == "right":
+            elif direction == "right" and current_x < SCREEN_WIDTH - TILE_SIZE:
                 current_x += TILE_SIZE
             self.entrance_path.append(pygame.Rect(current_x, current_y, TILE_SIZE, TILE_SIZE))
 
-        # Create the entrance room at the end of the path
-        self.entrance_room = Room(current_x, current_y, has_enemy=False)
+        # Create the entrance room at the end of the path, ensuring it's within bounds
+        entrance_x = max(TILE_SIZE, min(current_x, SCREEN_WIDTH - TILE_SIZE * 2))
+        entrance_y = max(TILE_SIZE, min(current_y, SCREEN_HEIGHT - TILE_SIZE * 3))
+        self.entrance_room = Room(entrance_x, entrance_y, has_enemy=False)
         self.entrance_room.color = (0, 0, 255)  # Unique color to represent the entrance room
 
 # Function to create a new dungeon with increasing rooms

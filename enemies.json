@@ -1,26 +1,65 @@
 {
-  "wolf": {
-    "name": "Wolf",
-    "life": 2,
-    "attack": 1,
-    "armor": 0,
-    "speed": 2,
-    "image_path": "sprites/wolf.png"
-  },
-  "werwolf": {
-    "name": "Werwolf",
-    "life": 3,
-    "attack": 2,
-    "armor": 0,
-    "speed": 1,
-    "image_path": "sprites/werwolf-001.png"
-  },
-  "mosquito": {
-    "name": "Mosquito",
-    "life": 1,
-    "attack": 1,
-    "armor": 0,
-    "speed": 5,
-    "image_path": "sprites/mosquito-001.png"
-  }
+    "wolf": {
+        "name": "Wolf",
+        "life": 3,
+        "attack": 1,
+        "armor": 0,
+        "speed": 2,
+        "image_path": "sprites/enemies/wolf.png",
+        "level": 1
+    },
+    "werwolf": {
+        "name": "Werwolf",
+        "life": 4,
+        "attack": 2,
+        "armor": 1,
+        "speed": 0,
+        "image_path": "sprites/enemies/werwolf-001.png",
+        "level": 2
+    },
+    "mosquito": {
+        "name": "Mosquito",
+        "life": 1,
+        "attack": 1,
+        "armor": 0,
+        "speed": 5,
+        "image_path": "sprites/enemies/mosquito-001.png",
+        "level": 1
+    },
+    "cat-001.": {
+        "name": "cat",
+        "image_path": "sprites/enemies/cat-001..png",
+        "life": 4,
+        "attack": 1,
+        "armor": 0,
+        "speed": 3,
+        "level": 2
+    },
+    "shark-001": {
+        "name": "shark",
+        "image_path": "sprites/enemies/shark-001.png",
+        "life": 3,
+        "attack": 3,
+        "armor": 2,
+        "speed": 0,
+        "level": 3
+    },
+    "snake-001": {
+        "name": "snake",
+        "image_path": "sprites/enemies/snake-001.png",
+        "life": 4,
+        "attack": 3,
+        "armor": 0,
+        "speed": 0,
+        "level": 3
+    },
+    "bat": {
+        "name": "bat-001",
+        "image_path": "sprites/enemies/bat-001.png",
+        "life": 2,
+        "attack": 1,
+        "armor": 0,
+        "speed": 3,
+        "level": 1
+    }
 }

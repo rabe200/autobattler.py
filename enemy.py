@@ -2,7 +2,6 @@
 import json
 import random
 import pygame
-from config import TILE_SIZE, BLACK
 
 ENEMY_DATA = None  # Global variable for enemy data
 
@@ -28,7 +27,7 @@ class Enemy(pygame.sprite.Sprite):
         self.attack = enemy_data[enemy_type]["attack"]
         self.armor = enemy_data[enemy_type]["armor"]
         self.speed = enemy_data[enemy_type]["speed"]
-
+        self.level = enemy_data[enemy_type]["level"]
         # Load the image from the path in the enemy data
         image_path = enemy_data[enemy_type]["image_path"]
         self.image = pygame.image.load(image_path).convert_alpha()
@@ -41,8 +40,16 @@ class Enemy(pygame.sprite.Sprite):
         screen.blit(self.image, self.rect)
 
 
-def create_random_enemy(x, y, tile_size):
+def create_random_enemy(x, y, tile_size, dungeon_level):
     """Create a random enemy using the global enemy data."""
     enemy_data = load_enemy_data()  # Ensure enemy data is loaded
-    enemy_type = random.choice(list(enemy_data.keys()))  # Pick a random enemy type
+    eligible_enemies = [
+        enemy_type for enemy_type, data in enemy_data.items()
+        if data["level"] <= dungeon_level
+    ]
+
+    if not eligible_enemies:
+        raise ValueError(f"no eligible enemies fround for dungeon level {dungeon_level}")
+
+    enemy_type = random.choice(eligible_enemies)  # Pick a random enemy type
     return Enemy(x, y, enemy_type, tile_size)
