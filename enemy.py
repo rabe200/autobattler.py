@@ -1,4 +1,3 @@
-# enemy.py
 import json
 import random
 import pygame
@@ -28,12 +27,30 @@ class Enemy(pygame.sprite.Sprite):
         self.armor = enemy_data[enemy_type]["armor"]
         self.speed = enemy_data[enemy_type]["speed"]
         self.level = enemy_data[enemy_type]["level"]
+        self.max_life = enemy_data[enemy_type]["life"]
+
+        # Add defeat tracking and initial attack storage
+        self.defeat_count = 0
+        self.initial_attack = self.attack  # Store initial attack to reset if needed
+
         # Load the image from the path in the enemy data
         image_path = enemy_data[enemy_type]["image_path"]
         self.image = pygame.image.load(image_path).convert_alpha()
         self.image = pygame.transform.scale(self.image, (tile_size, tile_size))  # Scale image to tile size
         self.rect = self.image.get_rect()
         self.rect.topleft = (x, y)
+
+    def increment_defeat_count(self):
+        """Increment defeat count and increase attack every 3 defeats."""
+        self.defeat_count += 1
+        if self.defeat_count % 3 == 0:
+            self.attack += 1
+            print(f"{self.name}'s attack power increased by 1 to {self.attack}!")
+
+    def reset_stats(self):
+        """Reset the enemy's stats to initial values for a new game."""
+        self.defeat_count = 0
+        self.attack = self.initial_attack
 
     def draw(self, screen):
         """Draw the enemy on the screen."""
@@ -49,7 +66,7 @@ def create_random_enemy(x, y, tile_size, dungeon_level):
     ]
 
     if not eligible_enemies:
-        raise ValueError(f"no eligible enemies fround for dungeon level {dungeon_level}")
+        raise ValueError(f"No eligible enemies found for dungeon level {dungeon_level}")
 
     enemy_type = random.choice(eligible_enemies)  # Pick a random enemy type
     return Enemy(x, y, enemy_type, tile_size)

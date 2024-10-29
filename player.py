@@ -24,6 +24,7 @@ class Player:
         self.speed = speed
         self.gold = gold
         self.equipment = []
+        self.max_life = life
 
     def add_equipment(self, item):
         self.equipment.append(item)

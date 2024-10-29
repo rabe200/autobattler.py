@@ -1,42 +1,47 @@
 [
-  {
-    "name": "Attack",
-    "cost": 5,
-    "life": 0,
-    "attack": 1,
-    "armor": 0,
-    "speed": 0
-  },
-  {
-    "name": "Armor",
-    "cost": 5,
-    "life": 0,
-    "attack": 0,
-    "armor": 1,
-    "speed": 0
-  },
-  {
-    "name": "Life",
-    "cost": 5,
-    "life": 2,
-    "attack": 0,
-    "armor": 0,
-    "speed": 0
-  },
-  {
-    "name": "Speed",
-    "cost": 5,
-    "life": 0,
-    "attack": 0,
-    "armor": 0,
-    "speed": 1
-  },
-  {
-    "name": "Potion of Health",
-    "cost": 5,
-    "life": 5,
-    "attack": 0,
-    "armor": 0,
-    "speed": 0
-  }
+    {
+        "name": "Attack",
+        "cost": 10,
+        "initial_cost": 5,
+        "life": 0,
+        "attack": 1,
+        "armor": 0,
+        "speed": 0
+    },
+    {
+        "name": "Armor",
+        "cost": 10,
+        "initial_cost": 5,
+        "life": 0,
+        "attack": 0,
+        "armor": 1,
+        "speed": 0
+    },
+    {
+        "name": "Life",
+        "cost": 5,
+        "initial_cost": 5,
+        "life": 2,
+        "attack": 0,
+        "armor": 0,
+        "speed": 0
+    },
+    {
+        "name": "Speed",
+        "initial_cost": 5,
+        "cost": 5,
+        "life": 0,
+        "attack": 0,
+        "armor": 0,
+        "speed": 1
+    },
+    {
+        "name": "Potion of Health",
+        "cost": 10,
+        "initial_cost": 5,
+        "life": 5,
+        "attack": 0,
+        "armor": 0,
+        "speed": 0
+    }
 ]
