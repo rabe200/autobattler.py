@@ -1,162 +1,86 @@
 # main.py
-from collections import defaultdict
 
 import pygame
 import sys
 
-from characters import characters
+import time
+
+import boss_encounter
+import config
+from battleLogic import battle, reset_enemy_stats, apply_damage
 from dungeon import create_new_dungeon
 from highscore import load_high_scores, save_high_scores
-from shop import shop
-from config import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, WHITE, TILE_SIZE, BROWN, BLACK
-from player import Player
+from hud import draw_hud
+from config import SCREEN_WIDTH, SCREEN_HEIGHT, FPS, TILE_SIZE, BROWN, BLACK
+from player import Player, load_player_data, reset_position
+import chest
 
-enemy_defeats = defaultdict(int)
+characters = load_player_data()
 
-# Dictionary to track how many times each enemy type has been defeated
-enemy_defeats = defaultdict(int)
-enemy_initial_attack = {}  # Dictionary to store initial attack values if needed
-
-def update_enemy_stats(enemy):
-    """Increase attack power of an enemy type every 3 defeats."""
-    enemy_defeats[enemy.name] += 1  # Increment the defeat count
-
-    # Check if the defeat count has reached a multiple of 3
-    if enemy_defeats[enemy.name] % 3 == 0:
-        enemy.attack += 1  # Increase attack by 1
-        print(f"{enemy.name} attack power increased by 1 to {enemy.attack}!")
-
-    # Optionally, store the initial attack value to reset each game
-    if enemy.name not in enemy_initial_attack:
-        enemy_initial_attack[enemy.name] = enemy.attack  # Store initial attack
-
-def reset_enemy_stats():
-    """Reset enemy stats (attack power) at the start of a new game."""
-    for enemy_name, initial_attack in enemy_initial_attack.items():
-        enemy_defeats[enemy_name] = 0  # Reset defeat counter
-        # Reset the attack value to its original value
-        for enemy in enemy_name:  # Assuming a list of enemy objects or use `enemy_name`
-            if enemy.name == enemy_name:
-                enemy.attack = initial_attack
 
 def select_character(screen):
     font = pygame.font.Font(None, 36)
     selected_index = 0
-    # Load high scores and pass characters as an argument
     high_scores = load_high_scores(characters)
+
+    character_keys = list(characters.keys())  # Get a list of keys from the dictionary
 
     while True:
         screen.fill((0, 0, 0))
 
-        for i, char in enumerate(characters):
-            color = (255, 255, 255) if i == selected_index else (100, 100, 100)
-            char_text = font.render(f"{char['name']} - HP: {char['stats']['life']}, AP: {char['stats']['attack']}", True, color)
-            highscore_text = font.render(f"High Score: {high_scores[char['name']]}", True, color)
+        for i, key in enumerate(character_keys):
+            character = characters[key]
+            is_selected = (i == selected_index)
+            color = (255, 255, 255) if is_selected else (100, 100, 100)
+            image_x = 50
+            image_y = 100 + i * 150
+            image_size = TILE_SIZE - 30
 
-            screen.blit(char_text, (200, 100 + i * 100))
-            screen.blit(highscore_text, (200, 130 + i * 100))
+            if is_selected:
+                pygame.draw.rect(screen, (255, 215, 0), (image_x - 5, image_y - 5, image_size + 10, image_size + 10), 3)
 
-            # Display character image
-            char_image = pygame.image.load(char["image_path"]).convert_alpha()
-            char_image = pygame.transform.scale(char_image, (TILE_SIZE * 2, TILE_SIZE * 2))
-            screen.blit(char_image, (50, 100 + i * 100))
+            stats = character["stats"] if "stats" in character else character
+            character_text = font.render(
+                f"{character['name']} - HP: {stats['life']}, AP: {stats['attack']}",
+                True, color
+            )
+            highscore_text = font.render(
+                f"High Score: {high_scores[character['name']]}",
+                True, color
+            )
+
+            screen.blit(character_text, (200, 100 + i * 150))
+            screen.blit(highscore_text, (200, 130 + i * 150))
+
+            char_image = pygame.image.load(character["image_path"]).convert_alpha()
+            char_image = pygame.transform.scale(char_image, (image_size, image_size))
+            screen.blit(char_image, (image_x, image_y))
 
         instructions = font.render("Use UP/DOWN to select, ENTER to choose", True, (255, 255, 255))
         screen.blit(instructions, (100, SCREEN_HEIGHT - 60))
 
+        # Update the display once per loop
         pygame.display.flip()
 
+        # Event handling for input
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_DOWN:
-                    selected_index = (selected_index + 1) % len(characters)
+                    selected_index = (selected_index + 1) % len(character_keys)
                 elif event.key == pygame.K_UP:
-                    selected_index = (selected_index - 1) % len(characters)
-                elif event.key == pygame.K_RETURN:
-                    return characters[selected_index]
-
-def step_back(player, dx, dy):
-    """Move the player one step back to avoid re-colliding with the room."""
-    player.move(-dx, -dy)
-
-
-def battle(player, enemy):
-    """Handle one round of battle."""
-    damage = max(0, player.attack - enemy.armor)
-    enemy.life -= damage
-    print(f"Player attacks! {enemy.name} armor: {enemy.armor}, health: {enemy.life}")
-
-    if enemy.life <= 0:
-        enemy_defeats[enemy.name] += 1
-        update_enemy_stats(enemy)
-        print("defeated times: ", enemy_defeats[enemy.name])
-        print("attack power", enemy.attack)
-        return "win"
-
-    # Enemy attacks if still alive
-    damage = max(0, enemy.attack - player.armor)
-    player.life -= damage
-    print(f"{enemy.name} attacks! Player armor: {player.armor}, health: {player.life}")
-
-    if player.life <= 0:
-        return "lose"
-
-    return "continue"
-
-def draw_health_bar(screen, x, y, current_health, max_health, color, width=100, height=10):
-    """Draw a health bar at a specific location with a given color and size."""
-    health_ratio = max(0, current_health / max_health)
-    pygame.draw.rect(screen, (128, 128, 128), (x, y, width, height))  # Background bar (gray)
-    pygame.draw.rect(screen, color, (x, y, width * health_ratio, height))  # Health portion
-
-def draw_hud(screen, player, enemy=None):
-    font = pygame.font.Font(None, 36)
-    player_stats = f"Gold: {player.gold}"
-    gold_text = font.render(player_stats, True, (255, 255, 0))
-
-    # Draw player stats
-    screen.blit(gold_text, (20, 20))
-    screen.blit(player.image, (20, SCREEN_HEIGHT - player.image.get_height() - 20))
-
-    # Draw player health bar
-    draw_health_bar(
-        screen,
-        x=player.image.get_width() * 3 + 100,  # Position
-        y=SCREEN_HEIGHT - 100,  # Position
-        current_health=player.life,
-        max_health=player.max_life,
-        color=(0, 255, 0),  # Green for player
-        width=150,
-        height=15
-    )
-
-    # If in battle, draw enemy health bar
-    if enemy:
-        draw_health_bar(
-            screen,
-            x=SCREEN_WIDTH - 250,  # Position
-            y=SCREEN_HEIGHT - 120,  # Position
-            current_health=enemy.life,
-            max_health=enemy.max_life,
-            color=(255, 0, 0),  # Red for enemy
-            width=150,
-            height=15
-        )
-        enemy_text = font.render(f"{enemy.name}", True, (255, 0, 0))
-        screen.blit(enemy_text, (SCREEN_WIDTH - 250, SCREEN_HEIGHT - 140))
-        screen.blit(enemy.image, (SCREEN_WIDTH - 120, SCREEN_HEIGHT - 120))
+                    selected_index = (selected_index - 1) % len(character_keys)
+                elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
+                    return characters[character_keys[selected_index]]
 
 
 def game_over_screen(screen, player, chosen_character, high_scores):
-    """Display the Game Over screen and handle high score display and restart."""
     font = pygame.font.Font(None, 74)
     font_small = pygame.font.Font(None, 36)
     display_scores = False
 
-    # Check and update high score if necessary
     if player.gold > high_scores[chosen_character["name"]]:
         high_scores[chosen_character["name"]] = player.gold
         save_high_scores(high_scores)
@@ -165,27 +89,24 @@ def game_over_screen(screen, player, chosen_character, high_scores):
         screen.fill(BLACK)
 
         if not display_scores:
-            # Display "Game Over" message
-            game_over_text = font.render("Game Over", True, (255, 0, 0))
+            game_over_text = font.render("You died", True, (255, 0, 0))
             screen.blit(game_over_text, (SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 100))
-
-            instruction_text = font_small.render("Press Enter or Space to see High Scores", True, (255, 255, 255))
+            instruction_text = font_small.render("Press Enter to continue", True, (255, 255, 255))
             screen.blit(instruction_text, (SCREEN_WIDTH // 2 - 180, SCREEN_HEIGHT // 2))
         else:
-            # Display High Scores
             title_text = font.render("High Scores", True, (255, 255, 255))
             screen.blit(title_text, (SCREEN_WIDTH // 2 - 100, 50))
 
-            for idx, char in enumerate(characters):
-                char_name = char["name"]
+            for idx, (char_key, char_data) in enumerate(characters.items()):
+                char_name = char_data["name"]
                 score_text = font_small.render(f"{char_name}: {high_scores[char_name]}", True, (255, 255, 255))
                 screen.blit(score_text, (SCREEN_WIDTH // 2 - 100, 150 + idx * 50))
 
             restart_text = font_small.render("Press Enter or Space to Restart", True, (255, 255, 255))
             screen.blit(restart_text, (SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT - 60))
 
-        pygame.display.flip()
 
+        pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -193,109 +114,195 @@ def game_over_screen(screen, player, chosen_character, high_scores):
             elif event.type == pygame.KEYDOWN:
                 if event.key in [pygame.K_RETURN, pygame.K_SPACE]:
                     if display_scores:
-                        return  # Exit to restart the game
-                    else:
-                        display_scores = True  # Show high scores on the next screen
+                        return
+            else:
+                display_scores = True
 
 def main():
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Autobattler Roguelite 001")
     clock = pygame.time.Clock()
-
+    reset_enemy_stats()
     chosen_character = select_character(screen)
     high_scores = load_high_scores(characters)
     dungeon_level, rooms_cleared = 1, 0
+    dungeon_finished = False
     dungeon = create_new_dungeon(dungeon_level)
-    start_pos = dungeon.get_random_path_position()
-    if not start_pos:
-        print("No valid starting position found.")
-        pygame.quit()
-        sys.exit()
-
+    bosses = boss_encounter.load_boss_data()
+    start_pos = dungeon.get_start_pos()
     player = Player(
         x=start_pos[0],
         y=start_pos[1],
         image_path=chosen_character["image_path"],
-        life=chosen_character["stats"]["life"],
-        attack=chosen_character["stats"]["attack"],
-        armor=chosen_character["stats"]["armor"],
-        speed=chosen_character["stats"]["speed"]
+        life=chosen_character["life"],
+        attack=chosen_character["attack"],
+        armor=chosen_character["armor"],
+        speed=chosen_character["speed"],
+        player_name=chosen_character["name"],
     )
-    last_position = (player.x, player.y)
-    running = True
-    in_battle, current_enemy, current_room, in_shop = False, None, None, False
-    reveal_entrance = False
-    shop_visited = False
-    while running:
+    print(f"mainGameLoop, armor player: {player.armor} \n")
+    boss_encounter_active = False
 
-        screen.fill(BLACK)
+    in_battle, current_enemy, current_room, in_shop, in_chest_room = False, None, None, False, False
+    battle_state = {"turn": None, "player_attacking": False, "enemy_attacking": False}
+
+    running = True
+
+    while running:
+        screen.fill((0, 0, 0))
+
+        # Check for Boss Level and setup
+        # Check if the current level is the boss level
+        if dungeon_level % config.BOSS_LEVEL == 0 and not boss_encounter_active:
+            dungeon = create_new_dungeon(dungeon_level, is_boss_level=True)
+            player.x, player.y = dungeon.get_start_pos()
+            if dungeon.level <= config.BOSS_LEVEL:
+                current_enemy = boss_encounter.spawn_boss(dungeon, bosses, config.BOSS_NAME, TILE_SIZE)
+                print(f"level: {dungeon_level} - spawning{current_enemy}")
+            else:
+                current_enemy = boss_encounter.spawn_boss(dungeon, bosses, config.BOSS_NAME_2, TILE_SIZE)
+                print(f"level: {dungeon_level} - spawning{current_enemy}")
+            if current_enemy is None:
+                print("Error: current_enemy is None after spawn_boss.")
+            else:
+                print(f"Boss spawned successfully: {current_enemy.name}")
+
+            boss_encounter_active = True
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN and in_battle and current_enemy:
-                    result = battle(player, current_enemy)
-                    if result == "win":
-                        print(f"{current_enemy.name} defeated!")
+                if event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
+                    if in_battle and current_enemy and not battle_state["player_attacking"] and not battle_state["enemy_attacking"]:
+                        battle_state = battle(player, current_enemy)
+                    else:
+                        print("space key pressed")
+                elif event.key == pygame.K_ESCAPE and in_battle:
+                    in_battle = False
+                    reset_position(player)
+
+
+        # Battle Logic and Animation
+        if in_battle:
+            if battle_state["turn"] == "player" and not battle_state["player_attacking"]:
+                player.start_attack()
+                battle_state["player_attacking"] = True
+
+            if player.attacking:
+                player.update_attack()
+            else:
+                if battle_state["player_attacking"]:
+                    apply_damage(current_enemy, player.attack)
+                    print(f"Player attacks! {current_enemy.name} armor: {current_enemy.armor}, health: {current_enemy.life}")
+                    if current_enemy.life <= 0:
                         player.gold += current_enemy.attack
                         current_room.has_enemy = False
                         current_room.enemy = None
                         current_room.color = BROWN
                         rooms_cleared += 1
                         in_battle = False
+                        player.reset_to_idle()
+                        print("Enemy defeated!")
+                        player.x += TILE_SIZE * 2
+                        player.rect.topleft = (player.x, player.y)
+                    if rooms_cleared == len(dungeon.rooms):
+                        dungeon_finished = True
+                    if current_enemy.life > 0:
+                        battle_state["player_attacking"] = False
+                        battle_state["turn"] = "enemy"
 
-                        if rooms_cleared == len(dungeon.rooms):
-                            reveal_entrance = True
-
-                    elif result == "lose":
-                        game_over_screen(screen, player, chosen_character, high_scores)
-                        main()  # Restart the game
-                elif event.key == pygame.K_ESCAPE and in_battle:
-                    in_battle = False
-                    player.x, player.y = last_position
-                elif event.key == pygame.K_b and not in_battle:
-                    in_shop = True
-
-        if in_shop:
-            if not shop_visited:
-                print("shop first visited")
-                shop(screen,player,shop_visited=False)
-                shop_visited=True
-                in_shop = False
+            if battle_state["turn"] == "enemy" and not battle_state["enemy_attacking"]:
+                current_enemy.start_attack()
+                battle_state["enemy_attacking"] = True
+            if current_enemy.attacking:
+                current_enemy.update_attack()
             else:
-                shop(screen,player,shop_visited=True)
-                print("shop visited before")
-                in_shop = False
+                if battle_state["enemy_attacking"]:
+                    apply_damage(player, current_enemy.attack)
+                    print(f"{current_enemy.name} attacks! Player armor: {player.armor}, health: {player.life}")
+                    if player.life <= 0:
+                        print("Player defeated!")
+                        game_over_screen(screen, player, chosen_character, high_scores)
+                        main()
+                    battle_state["enemy_attacking"] = False
+                    battle_state["turn"] = "player"
 
-        if reveal_entrance and dungeon.entrance_room and player.rect.colliderect(dungeon.entrance_room.rect):
+        # Handle end of boss encounter
+        if boss_encounter_active and not in_battle and current_enemy and current_enemy.life <= 0:
+            current_enemy = None
+            print("Boss defeated!")
+            boss_encounter_active = False
+            dungeon = create_new_dungeon(dungeon_level)
+            player.x, player.y = dungeon.get_start_pos()
+
+        # Check for shop visit
+        if in_chest_room:
+            in__chest_room = chest.chest(screen, player)
+
+        # Dungeon transition
+        if dungeon_finished:
+            in_battle = False
             dungeon_level += 1
             dungeon = create_new_dungeon(dungeon_level)
             rooms_cleared = 0
-            reveal_entrance = False
-            start_pos = dungeon.get_random_path_position()
+            start_pos = dungeon.get_start_pos()
             player.x, player.y = start_pos
+            dungeon_finished = False
+            pygame.event.clear()
+            time.sleep(0.1)
+        # Chest room logic
+        if in_chest_room:
+            in_chest_room = False
+            rooms_cleared += 1
+            if rooms_cleared == len(dungeon.rooms):
+                dungeon_finished = True
 
         keys = pygame.key.get_pressed()
 
-        if not in_battle:
-            dx, dy = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT], keys[pygame.K_DOWN] - keys[pygame.K_UP]
+        if not in_battle and not in_chest_room:
+            dx = (keys[pygame.K_RIGHT] or keys[pygame.K_d] or keys[pygame.K_SPACE]) - (keys[pygame.K_LEFT] or keys[pygame.K_a])
+            dy = (keys[pygame.K_DOWN] or keys[pygame.K_s]) - (keys[pygame.K_UP] or keys[pygame.K_w])
             new_x, new_y = player.x + dx * TILE_SIZE, player.y + dy * TILE_SIZE
 
-            if any(path.collidepoint(new_x, new_y) for path in dungeon.paths) or (reveal_entrance and dungeon.entrance_path and any(path.collidepoint(new_x, new_y) for path in dungeon.entrance_path)):
-                last_position = (player.x, player.y)
+            if any(path.collidepoint(new_x, new_y) for path in dungeon.paths):
                 player.move(dx, dy)
 
             collided_room = player.check_room_collision(dungeon.rooms)
-            if collided_room and collided_room.has_enemy:
+            if collided_room and collided_room.has_enemy and not in_battle and dungeon.level % config.BOSS_LEVEL != 0:
+                print(current_enemy, collided_room.enemy)
                 current_enemy, current_room = collided_room.enemy, collided_room
+                print(current_enemy, collided_room.enemy)
+                current_enemy.enter_fight()
                 in_battle = True
+                battle_state = {"turn": "player" if player.speed > current_enemy.speed else "enemy",
+                                "player_attacking": False, "enemy_attacking": False}
+                player.x -= TILE_SIZE
+                player.rect.topleft = (player.x, player.y)
+            elif collided_room and collided_room.has_enemy and not in_battle and dungeon_level % config.BOSS_LEVEL == 0:
+                print(current_enemy.name)
+                current_enemy.enter_fight()
+                in_battle = True
+                battle_state = {"turn": "player" if player.speed > current_enemy.speed else "enemy",
+                                "player_attacking": False, "enemy_attacking": False}
+                player.x -= TILE_SIZE
+                player.rect.topleft = (player.x, player.y)
 
-        dungeon.draw(screen, reveal_entrance)
+            elif collided_room and collided_room.room_type == "chest" and not collided_room.has_looted:
+                print("Entered chest room")
+                collided_room.has_looted = True
+                in_chest_room = True
+
+        # Draw everything
+        dungeon.draw(screen)
         player.draw(screen)
-        draw_hud(screen, player, current_enemy if in_battle else None)
+        if current_enemy:
+            current_enemy.draw(screen)
+        draw_hud(screen, player, dungeon, current_enemy if in_battle else None)
         pygame.display.flip()
+
         clock.tick(FPS)
 
 if __name__ == "__main__":

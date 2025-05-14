@@ -1,0 +1,18 @@
+{
+  "Gustav": {
+    "image_path": "sprites/gustav-gans.png",
+    "name": "Gustav",
+    "life": 8,
+    "attack": 1,
+    "armor": 1,
+    "speed": 0
+  },
+  "Blumenverkäufer": {
+    "name": "Blumenverkäufer",
+    "image_path": "sprites/flowerPower-Frog.png",
+    "life": 8,
+    "attack": 2,
+    "armor": 0,
+    "speed": 0
+  }
+}

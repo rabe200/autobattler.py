@@ -1,0 +1,34 @@
+{   "Presidental Horse": {
+    "name": "Presidental Horse",
+    "life": 10,
+    "attack": 2,
+    "attack-initial": 1,
+    "armor": 2,
+    "speed": 0,
+    "image_path": "sprites/enemies/bat-001.png",
+    "level": 10,
+    "defeat-counter": 0
+},
+    "Pete Frog": {
+        "name": "Pete Frog",
+        "life": 8,
+        "attack": 3,
+        "attack-initial": 3,
+        "armor": 0,
+        "speed": 0,
+        "image_path": "sprites/enemies/flowerPower-Frog.png",
+        "level": 20,
+        "defeat-counter": 0
+    },
+    "Der Geigenbauer": {
+        "name": "Der Geigenbauer",
+        "life": 16,
+        "attack": 4,
+        "attack-initial": 4,
+        "armor": 6,
+        "speed": 6,
+        "image_path": "sprites/enemies/der-geigenbauer",
+        "level": 30,
+        "defeat-counter": 0
+    }
+}

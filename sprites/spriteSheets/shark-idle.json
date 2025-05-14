@@ -1,0 +1,34 @@
+{ "frames": {
+   "Sprite-0041 0.": {
+    "frame": { "x": 4, "y": 4, "w": 136, "h": 136 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 128, "h": 128 },
+    "sourceSize": { "w": 128, "h": 128 },
+    "duration": 500
+   },
+   "Sprite-0041 1.": {
+    "frame": { "x": 4, "y": 144, "w": 136, "h": 136 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 128, "h": 128 },
+    "sourceSize": { "w": 128, "h": 128 },
+    "duration": 500
+   }
+ },
+ "meta": {
+  "app": "https://www.aseprite.org/",
+  "version": "1.3.9.2-arm64",
+  "image": "shark-idle.png",
+  "format": "RGBA8888",
+  "size": { "w": 144, "h": 284 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "layers": [
+   { "name": "Layer 1", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
+}

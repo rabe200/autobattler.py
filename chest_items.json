@@ -1,0 +1,32 @@
+[
+    {
+        "name": "sword",
+        "cost": 5,
+        "initial_cost": 5,
+        "life": 0,
+        "attack": 1,
+        "armor": 0,
+        "speed": 0,
+        "purchase_count": 6
+    },
+    {
+        "name": "scale",
+        "cost": 5,
+        "initial_cost": 5,
+        "life": 0,
+        "attack": 0,
+        "armor": 1,
+        "speed": 0,
+        "purchase_count": 6
+    },
+    {
+        "name": "heart",
+        "cost": 5,
+        "initial_cost": 5,
+        "life": 1,
+        "attack": 0,
+        "armor": 0,
+        "speed": 0,
+        "purchase_count": 1
+    }
+]

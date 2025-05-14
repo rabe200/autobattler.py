@@ -1,0 +1,35 @@
+[
+  {
+    "name": "horse-skull",
+    "cost": 50,
+    "initial_cost": 50,
+    "life": 0,
+    "attack": 0,
+    "armor": 2,
+    "speed": 0,
+    "purchased": false,
+    "unlocked": false
+  },
+  {
+    "name": "horse-cape",
+    "cost": 50,
+    "initial_cost": 50,
+    "life": 0,
+    "attack": 0,
+    "armor": 1,
+    "speed": 2,
+    "purchased": false,
+    "unlocked": false
+  },
+  {
+    "name": "horse-dagger",
+    "cost": 50,
+    "initial_cost": 50,
+    "life": 0,
+    "attack": 2,
+    "armor": 0,
+    "speed": 0,
+    "purchased": false,
+    "unlocked": false
+  }
+]
